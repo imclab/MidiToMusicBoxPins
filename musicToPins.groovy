@@ -27,13 +27,16 @@ else
 	"test.mid");
 
 Sequence sequence = MidiSystem.getSequence(midiFile);
+Sequencer sequencer = MidiSystem.getSequencer();
+sequencer.open();
+sequencer.setSequence(sequence);
 
 int trackNumber = 0;
 for (Track track :  sequence.getTracks()) {
   trackNumber++;
  
   double permiter = pinSize*2*track.size()
-  double radius = (permiter/Math.PI)/2
+  double radius = (permiter/Math.PI)/4
   int lastTick = track.get(track.size()-1).getTick()
   System.out.println("Track " + trackNumber + ": size = " + track.size()+" song radius "+radius+"  last event tick: " +lastTick);
   System.out.println();
@@ -46,7 +49,8 @@ for (Track track :  sequence.getTracks()) {
   					);
   for (int i=0; i < track.size(); i++) { 
       MidiEvent event = track.get(i);
-      System.out.print("@" + event.getTick() + " ");
+      int myTick = event.getTick()
+      System.out.print("@" + myTick + " ");
       MidiMessage message = event.getMessage();
       if (message instanceof ShortMessage) {
           ShortMessage sm = (ShortMessage) message;
@@ -58,10 +62,19 @@ for (Track track :  sequence.getTracks()) {
               String noteName = NOTE_NAMES[note];
               int velocity = sm.getData2();
               System.out.println("Note on, " + noteName + octave + " key=" + key + " velocity: " + velocity);
-              nubs.add(sphere
+              CSG thisNub = sphere
 					.movey((note*pinSize)+radius)
 					.rotz((360/lastTick)*event.getTick())
-					)
+              nubs.add(thisNub)
+              int[] controllersOfInterest = [ 1, 2, 4 ] as  int[] ;
+              ControllerEventListener controllerEventListener = new ControllerEventListener() {
+			   public void controlChange(ShortMessage e) {
+			      // TODO convert the event into a readable/desired output
+			      System.out.println(e);
+			   }
+			};
+              sequencer.addControllerEventListener(controllerEventListener,
+        		controllersOfInterest);
           } else if (sm.getCommand() == NOTE_OFF) {
               int key = sm.getData1();
               int octave = (key / 12)-1;
@@ -80,12 +93,12 @@ for (Track track :  sequence.getTracks()) {
   System.out.println();
 }
 
-Sequencer sequencer = MidiSystem.getSequencer();
-sequencer.open();
-sequencer.setSequence(sequence);
 
 // Start playing
 sequencer.start();
 
+while(sequencer.isRunning()){
+	Thread.sleep(30); // Check every 30 mili second
+}
 
 return nubs
