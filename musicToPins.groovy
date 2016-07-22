@@ -2,7 +2,8 @@
 import java.io.File;
 import java.io.IOException;
 import javax.sound.midi.*;
-
+import com.neuronrobotics.nrconsole.util.*;
+import javafx.stage.FileChooser.ExtensionFilter;
 double pinSize = 10
 
 int NOTE_ON = 0x90;
@@ -14,7 +15,18 @@ CSG sphere = new Sphere(pinSize/2)// Spheres radius
 // A list of nubs to return 
 ArrayList<CSG> nubs = new ArrayList<>()
 
-Sequence sequence = MidiSystem.getSequence(new File("/usr/lib/pd/extra/cyclone/test.mid"));
+
+
+File midiFile=null;
+
+if(args!=null)
+	midiFile = args
+else
+	midiFile= ScriptingEngine.fileFromGit(
+	"https://github.com/madhephaestus/MidiToMusicBoxPins.git",
+	"test.mid");
+
+Sequence sequence = MidiSystem.getSequence(midiFile);
 
 int trackNumber = 0;
 for (Track track :  sequence.getTracks()) {
@@ -25,7 +37,13 @@ for (Track track :  sequence.getTracks()) {
   int lastTick = track.get(track.size()-1).getTick()
   System.out.println("Track " + trackNumber + ": size = " + track.size()+" song radius "+radius+"  last event tick: " +lastTick);
   System.out.println();
-  nubs.add(new Cylinder(radius-pinSize/2,radius-pinSize/2,pinSize,(int)30).toCSG());
+  double holderRad = radius-pinSize/2
+  double maxRad = radius+(pinSize*NOTE_NAMES.length)+pinSize
+  nubs.add(new Cylinder(holderRad,holderRad,pinSize,(int)30).toCSG());
+  nubs.add(new Cylinder(maxRad,maxRad,pinSize,(int)30)
+  					.toCSG()
+  					.movez(-pinSize+1)
+  					);
   for (int i=0; i < track.size(); i++) { 
       MidiEvent event = track.get(i);
       System.out.print("@" + event.getTick() + " ");
