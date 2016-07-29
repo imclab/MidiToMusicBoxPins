@@ -9,6 +9,12 @@ double pinSize = 10
 int NOTE_ON = 0x90;
 int NOTE_OFF = 0x80;
 def NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as String [];
+File nubFile = ScriptingEngine.fileFromGit(
+	"https://github.com/NeuronRobotics/BowlerStudioVitamins.git",
+	"BowlerStudioVitamins/stl/servo/smallservo.stl");
+// Load the .CSG from the disk and cache it in memory
+CSG nubCSG  = Vitamins.get(servoFile);
+
 //create a sphere
 CSG sphere = new Sphere(pinSize/2)// Spheres radius
 				.toCSG()// convert to CSG to display
